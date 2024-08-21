@@ -14,7 +14,12 @@ const router = useRouter();
 const userId = Cookies.get('userId');
 
 const fetchArticles = async (isLoadMore = false) => {
+
   let url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog?page=${page.value}&limit=3`;
+  
+  if (props.my_posts && userId) {
+    url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog`;
+  }
 
   if (props.searchQuery) {
     url += `&search=${encodeURIComponent(props.searchQuery)}`;
@@ -130,7 +135,7 @@ watch(
 
 .blog-image {
   width: 100%;
-  height: auto;
+  height: 240px;
   border-radius: 6px;
 }
 

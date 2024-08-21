@@ -223,94 +223,113 @@ textarea {
   background-color: #8769FF;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1250px) {
   .edit-form-container {
-    width: 90%;
+    width: 86%;
+    padding: 20px;
     height: auto;
+  }
+
+  .parts {
+    width: 100%;
+    flex-direction: column;
+    margin: 0 auto;
+  }
+
+  .part-1, .part-2 {
+    margin: 0 auto;
+  }
+
+  label {
+  max-width: 80%;
+  margin: 0 auto;
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  text-align: left;
+}
+
+  input,
+textarea {
+  max-width: 80%;
+  max-width: 80%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.form-group {
+  width: 86%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.button-div {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.submit-btn, .cancel-btn {
+    width: 40%;
+  }
+
+}
+
+@media (max-width: 768px) {
+  .parts {
+    flex-direction: column;
+  }
+
+  .part-2 {
+    margin-top: 20px;
+  }
+
+  .button-div {
+    flex-direction: column;
+  }
+
+  .submit-btn, .cancel-btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .edit-form-container {
     padding: 15px;
   }
 
   h2 {
-    text-align: center;
-    margin-bottom: 20px;
+    font-size: 24px;
   }
 
-  .form-group {
-    margin-bottom: 15px;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-  }
-
-  label {
-    width: 91%;
-    margin: 0 auto;
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    text-align: left;
-  }
-
-  input,
-  textarea {
-    width: 90%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  .button-div {
-    width: 91%;
-    height: 48px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 20px;
-  }
-
-  .submit-btn {
-    width: 144px;
-    height: 48px;
-    font-family: 'Work', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 28px;
-    text-align: center;
+  input, textarea {
     padding: 10px;
-    border-radius: 12px;
-    border: 1px solid #E8E8EA;
-    gap: 10px;
-    background-color: white;
-    color: black;
-
   }
 
-  .cancel-btn {
-    width: 144px;
-    height: 48px;
-    font-family: 'Work', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 28px;
-    text-align: center;
+  .submit-btn, .cancel-btn {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 350px) {
+  .edit-form-container {
     padding: 10px;
-    border-radius: 12px;
-    border: 1px solid #E8E8EA;
-    gap: 10px;
-    background-color: white;
   }
 
-  .active {
-    color: white;
-    background-color: #8769FF;
+  h2 {
+    font-size: 20px;
   }
 
+  .submit-btn, .cancel-btn {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
 }
 </style>

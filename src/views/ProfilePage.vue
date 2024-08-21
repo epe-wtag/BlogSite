@@ -4,108 +4,137 @@ import Cookies from 'js-cookie';
 import PageHeader from '../components/PageHeader.vue';
 import BlogList from '@/components/BlogList.vue';
 import EditForm from '@/components/EditForm.vue';
+import CreateBlog from '@/components/CreateBlog.vue';
 
-const userId = Cookies.get('userId');  
+
+
+const userId = Cookies.get('userId');
 const searchQuery = ref<string>('');
 
 const userData = ref({
-  full_name: '',
-  email: '',
-  picture: '',
-  bio: '',
+    id: '',
+    full_name: '',
+    email: '',
+    picture: '',
+    bio: '',
 });
 
 const isEditVisible = ref(false);
+const isCreateVisible = ref(false);
 
 const toggleEditContainer = () => {
-  isEditVisible.value = !isEditVisible.value;
+    if (isCreateVisible.value == true) {
+        isCreateVisible.value = false;
+    }
+    isEditVisible.value = !isEditVisible.value;
 };
+
+const toggleCreateContainer = () => {
+    if (isEditVisible.value == true) {
+        isEditVisible.value = false;
+    }
+    isCreateVisible.value = !isCreateVisible.value;
+};
+
 
 
 const fetchUserData = async () => {
-  if (userId) {
-    try {
-      const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/user/${userId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-      const data = await response.json();
-      userData.value = data;  
-    } catch (error) {
-      console.error(error);
+    if (userId) {
+        try {
+            const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/user/${userId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+            const data = await response.json();
+            userData.value = data;
+        } catch (error) {
+            console.error(error);
+        }
+    } else {
+        console.error('User ID not found in cookies');
     }
-  } else {
-    console.error('User ID not found in cookies');
-  }
 };
 
+
 onMounted(() => {
-  fetchUserData();
+    fetchUserData();
 });
 </script>
 
 <template>
     <main>
-      <PageHeader :display="false"/>
-      <div class="create-edit-div">
-        <div class="create-div">
-          <plus-circle-icon class="plus-icon" />
+        <PageHeader :display="false" />
+        <div class="create-edit-div">
+            <div class="create-div" @click="toggleCreateContainer">
+                <plus-circle-icon class="plus-icon" />
+            </div>
+            <div class="edit-div" @click="toggleEditContainer">
+                <pencil-square-icon class="edit-icon" />
+            </div>
         </div>
-        <div class="edit-div" @click="toggleEditContainer">
-          <pencil-square-icon class="edit-icon" />
-        </div>
-      </div>
 
-      <div class="user-div">
-        <div class="user-info-div">
-            <div class="user-info">
-                <img :src="userData.picture" alt="Profile Picture" class="user-image"/>
-                <div class="user-name-and-email">
-                    <div class="user-name">{{ userData.full_name }}</div>
-                    <div class="user-email">{{ userData.email }}</div>
+        <div class="user-div">
+            <div class="user-info-div">
+                <div class="user-info">
+                    <img :src="userData.picture" alt="Profile Picture" class="user-image" />
+                    <div class="user-name-and-email">
+                        <div class="user-name">{{ userData.full_name }}</div>
+                        <div class="user-email">{{ userData.email }}</div>
+                    </div>
+                </div>
+                <div class="user-bio">
+                    {{ userData.bio }}
+                </div>
+                <div class="user-media">
+                    <div class="social-icon-div">
+                        <font-awesome-icon icon="fa-brands fa-facebook-f" class="social-icon" />
+                    </div>
+                    <div class="social-icon-div">
+                        <font-awesome-icon icon="fa-brands fa-twitter" class="social-icon" />
+                    </div>
+                    <div class="social-icon-div">
+                        <font-awesome-icon icon="fa-brands fa-instagram" class="social-icon" />
+                    </div>
+                    <div class="social-icon-div">
+                        <font-awesome-icon icon="fa-brands fa-youtube" class="social-icon" />
+                    </div>
                 </div>
             </div>
-          <div class="user-bio">
-            {{ userData.bio }}
-          </div>
-          <div class="user-media">
-            <div class="social-icon-div">
-                <font-awesome-icon icon="fa-brands fa-facebook-f" class="social-icon" />
-            </div>
-            <div class="social-icon-div">
-                <font-awesome-icon icon="fa-brands fa-twitter" class="social-icon" />
-            </div>
-            <div class="social-icon-div">
-                <font-awesome-icon icon="fa-brands fa-instagram" class="social-icon" />
-            </div>
-            <div class="social-icon-div">
-                <font-awesome-icon icon="fa-brands fa-youtube" class="social-icon" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="isEditVisible" class="edit-container">
-        <EditForm :userData="userData"/>
-      </div>
-
-      <div class="my-posts">
-        <div class="my-post-header">
-            My Published Blogs
-        </div>
-        <div class="blog-container">
-            <BlogList :searchQuery="searchQuery" :my_posts="true" />
         </div>
 
-      </div>
+        <div v-if="isEditVisible" class="edit-container">
+            <EditForm :userData="userData" />
+        </div>
+
+        <div v-if="isCreateVisible" class="create-container">
+            <CreateBlog 
+                @blogCreated="toggleCreateContainer"
+                :author="{
+                id: userData.id, 
+                name: userData.full_name, 
+                image: userData.picture
+                }"
+            />
+        </div>
+
+        <div class="my-posts">
+            <div class="my-post-header">
+                My Published Blogs
+            </div>
+            <div class="blog-container">
+                <BlogList :searchQuery="searchQuery" :my_posts="true" />
+            </div>
+
+        </div>
     </main>
-  </template>
+</template>
 
 <style scoped>
 main {
     display: flex;
     flex-direction: column;
 }
+
 .create-edit-div {
     width: 100%;
     height: 20px;
@@ -120,18 +149,23 @@ main {
     justify-content: flex-end;
     gap: 10px;
 }
-.create-div, .edit-div {
+
+.create-div,
+.edit-div {
     width: 20px;
     height: 20px;
     text-decoration: none;
 }
-.plus-icon, .edit-icon {
+
+.plus-icon,
+.edit-icon {
     width: 20px;
     height: 20px;
     top: 2px;
     left: 2px;
 
 }
+
 .user-div {
     background-color: #F6F6F7;
     width: 1216px;
@@ -148,6 +182,7 @@ main {
     margin-top: 20px;
     margin-bottom: 20px;
 }
+
 .user-info {
     width: 100%;
     display: flex;
@@ -159,15 +194,18 @@ main {
     margin-top: 40px;
     margin-bottom: 20px;
 }
+
 .user-image {
     height: 64px;
     width: 64px;
     border-radius: 50%
 }
+
 .user-name-and-email {
     display: flex;
     flex-direction: column;
 }
+
 .user-name {
     color: #181A2A;
     font-family: 'Work', sans-serif;
@@ -176,6 +214,7 @@ main {
     line-height: 28px;
     text-align: left;
 }
+
 .user-email {
     color: #696A75;
     font-family: 'Work', sans-serif;
@@ -184,6 +223,7 @@ main {
     line-height: 20px;
     text-align: left;
 }
+
 .user-bio {
     width: 668px;
     justify-content: center;
@@ -194,6 +234,7 @@ main {
     font-weight: 400;
     color: #3B3C4A;
 }
+
 .user-media {
     display: flex;
     flex-direction: row;
@@ -204,18 +245,25 @@ main {
     margin: 0 auto;
     margin-top: 30px;
 }
+
 .social-icon-div {
     padding: 8px 8px 8px 8px;
     gap: 8px;
     border-radius: 6px;
     background-color: #696A75;
 }
+
 .social-icon {
     color: white;
     width: 16px;
     height: 16px;
     padding: 0%;
 }
+
+.create-container {
+    margin-top: 20px;
+}
+
 .my-posts {
     width: 1216px;
     max-width: 1216px;
@@ -223,6 +271,7 @@ main {
     padding-top: 20px;
     padding-bottom: 30px;
 }
+
 .my-post-header {
     font-family: 'Work', sans-serif;
     font-size: 24px;
@@ -230,6 +279,7 @@ main {
     line-height: 28px;
     text-align: left;
 }
+
 .blog-container {
     margin-top: 20px;
 }
@@ -239,10 +289,12 @@ main {
     .my-posts {
         width: 100%;
     }
+
     .user-div {
         width: 90%;
 
     }
+
     .my-post-header {
         font-size: 20px;
     }
@@ -256,12 +308,14 @@ main {
         padding-bottom: 10px;
     }
 
-    .create-div, .edit-div {
+    .create-div,
+    .edit-div {
         width: 24px;
         height: 24px;
     }
 
-    .plus-icon, .edit-icon {
+    .plus-icon,
+    .edit-icon {
         width: 24px;
         height: 24px;
     }
@@ -314,6 +368,7 @@ main {
         width: 14px;
         height: 14px;
     }
+
     .my-posts {
         width: 100%;
     }
@@ -326,12 +381,14 @@ main {
         justify-content: center;
     }
 
-    .create-div, .edit-div {
+    .create-div,
+    .edit-div {
         width: 28px;
         height: 28px;
     }
 
-    .plus-icon, .edit-icon {
+    .plus-icon,
+    .edit-icon {
         width: 28px;
         height: 28px;
     }
@@ -393,12 +450,14 @@ main {
         justify-content: center;
     }
 
-    .create-div, .edit-div {
+    .create-div,
+    .edit-div {
         width: 32px;
         height: 32px;
     }
 
-    .plus-icon, .edit-icon {
+    .plus-icon,
+    .edit-icon {
         width: 32px;
         height: 32px;
     }
