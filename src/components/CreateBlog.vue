@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { postBlog } from '@/composables/postBlog';
 
 const props = defineProps<{
   author: {
@@ -10,66 +11,51 @@ const props = defineProps<{
   }
 }>();
 
-
 const category = ref('');
 const title = ref('');
 const description = ref('');
 const image = ref('');
 const router = useRouter();
+const { error, post } = postBlog();
 
 const handleSubmit = async () => {
   const blogData = {
     category: category.value,
     title: title.value,
     description: description.value,
-    created_at: Math.floor(Date.now() / 1000), 
-    author: {
-      id: props.author.id,
-      name: props.author.name,
-      image: props.author.image
-    },
-    image: image.value
+    created_at: Math.floor(Date.now() / 1000),
+    author: props.author,
+    image: image.value,
   };
 
-  try {
-    const response = await fetch('https://66bc281924da2de7ff69786f.mockapi.io/Blog/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(blogData),
-    });
+  await post('Blog', blogData);
 
-    if (!response.ok) {
-      throw new Error('Failed to create blog');
-    }
-
-    router.push({ name: 'BlogPage' });
-  } catch (error) {
-    console.error(error);
+  if (error.value) {
+    console.error('Failed to create blog:', error.value);
+  } else {
+    router.push({ name: 'home' });
   }
 };
-
 </script>
 
 <template>
   <div class="create-blog-container">
-    <h2>Create New Blog</h2>
+    <h2 class="h2">Create New Blog</h2>
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
-        <label for="category">Category</label>
+        <label class="label" for="category">Category</label>
         <input v-model="category" id="category" type="text" required />
       </div>
       <div class="form-group">
-        <label for="title">Title</label>
+        <label  class="label" for="title">Title</label>
         <input v-model="title" id="title" type="text" required />
       </div>
       <div class="form-group">
-        <label for="description">Description</label>
+        <label class="label" for="description">Description</label>
         <textarea v-model="description" id="description" required></textarea>
       </div>
       <div class="form-group">
-        <label for="image">Image URL</label>
+        <label  class="label" for="image">Image URL</label>
         <input v-model="image" id="image" type="text" />
       </div>
       <div class="button-div">
@@ -99,12 +85,12 @@ const handleSubmit = async () => {
   text-align: center;
 }
 
-h2 {
+.h2 {
   text-align: center;
   margin-bottom: 20px;
 }
 
-label {
+.label {
   width: 91%;
   margin: 0 auto;
   display: block;

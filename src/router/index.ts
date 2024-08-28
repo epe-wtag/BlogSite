@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import BlogPage from '@/views/BlogPage.vue'
 import ProfilePage from '@/views/ProfilePage.vue'
+import BlogEdit from '@/views/BlogEdit.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,11 +11,6 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue')
     },
     {
       path: '/login',
@@ -37,6 +33,11 @@ const router = createRouter({
       name: 'profile',
       component: ProfilePage,
     },
+    {
+      path: '/blog-edit/:blog_id',
+      name: 'BlogEdit',
+      component: BlogEdit
+    }
   ]
 })
 

@@ -1,57 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
+import { computed, onMounted, toRef } from 'vue';
 import { useRouter } from 'vue-router';
 import Cookies from 'js-cookie';
+import { useFetchArticles } from '@/composables/useFetchArticles';
 
 const props = defineProps<{
   searchQuery: string;
-  my_posts: Boolean;
+  my_posts: boolean;
 }>();
 
-const articles = ref<any[]>([]);
-const page = ref(1);
 const router = useRouter();
-const userId = Cookies.get('userId');
-
-const fetchArticles = async (isLoadMore = false) => {
-
-  let url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog?page=${page.value}&limit=3`;
-  
-  if (props.my_posts && userId) {
-    url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog`;
-  }
-
-  if (props.searchQuery) {
-    url += `&search=${encodeURIComponent(props.searchQuery)}`;
-  }
-
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-
-    let filteredData = data;
-    if (props.my_posts && userId) {
-      filteredData = data.filter((article: any) => article.author?.id === userId);
-    }
-
-    if (isLoadMore) {
-      articles.value.push(...filteredData);
-    } else {
-      articles.value = filteredData;
-    }
-  } catch (error) {
-    console.error('Error fetching articles:', error);
-  }
-};
-
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
-}
+const searchQueryRef = toRef(props, 'searchQuery');
+const myPostsRef = toRef(props, 'my_posts');
+const { articles, page, fetchArticles } = useFetchArticles(searchQueryRef, myPostsRef);
 
 function loadMore() {
   page.value += 1;
@@ -70,24 +31,23 @@ onMounted(() => {
   fetchArticles();
 });
 
-watch(
-  () => props.searchQuery,
-  (newQuery) => {
-    page.value = 1;
-    fetchArticles();
-  }
-);
+function formatDate(timestamp: number) {
+  const date = new Date(timestamp * 1000);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
 </script>
-
-
 
 <template>
   <div class="blog-list">
     <div 
-    v-for="(article, index) in articles" 
-    :key="index" 
-    class="blog-item"
-    @click="navigateToBlog(article.id)" 
+      v-for="(article, index) in articles" 
+      :key="index" 
+      class="blog-item"
+      @click="navigateToBlog(article.id)" 
     >
       <img :src="article.image" alt="news Image" class="blog-image" />
       <div class="blog-item-header">

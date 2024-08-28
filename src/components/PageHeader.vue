@@ -1,67 +1,27 @@
-<script>
-import Cookies from 'js-cookie';
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useUser } from '@/composables/useUser';
 
-export default {
-  name: 'PageHeader',
-  
-  props: {
-    display: {
-      type: Boolean,
-      required: true,
-    },
-  },
-  
-  data() {
-    return {
-      searchQuery: '',
-      isLoggedIn: false,
-      userName: '',
-    };
-  },
-  
-  methods: {
-    onSearch() {
-      this.$emit('search', this.searchQuery);
-    },
+const props = defineProps<{
+  display: boolean;
+}>();
 
-    async fetchUserData(userId) {
-      try {
-        const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/user/${userId}`);
-        const data = await response.json();
+const emit = defineEmits(['search']);
 
-        if (response.ok) {
-          const fullName = data.full_name || '';
-          this.userName = fullName.split(' ')[0];
-        } else {
-          console.error('Failed to fetch user data');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    },
-    handleLogout() {
-      Cookies.remove('userId');
-      this.isLoggedIn = false;
-      this.userName = '';
-      this.$router.push('/');
-    }
-  },
+const { userName, isLoggedIn, handleLogout } = useUser();
+const searchQuery = ref<string>('');
 
+function onSearch() {
+  console.log('Search triggered with query:', searchQuery.value);
+  emit('search', searchQuery.value);
+}
 
-  created() {
-    this.isLoggedIn = !!Cookies.get('userId');
-    if (this.isLoggedIn) {
-      const userId = Cookies.get('userId');
-      this.fetchUserData(userId);
-    }
-  }
-};
 </script>
 
 <template>
   <header class="header">
     <RouterLink to="/" class="header__website-name">WellBlog</RouterLink>
-    <div v-if="display" class="header__search-container">
+    <div v-if="props.display" class="header__search-container">
       <input 
         type="text" 
         class="header__search-bar" 
@@ -74,7 +34,7 @@ export default {
       </span>
     </div>
     <div v-if="isLoggedIn" class="header__profile-links">
-      <span class="wellcome">Wellcome</span>
+      <span class="wellcome">Welcome</span>
       <RouterLink class="profile-link" to="/profile">{{ userName }}</RouterLink>
       <RouterLink class="icon-div" to="/" @click="handleLogout">
         <arrow-left-start-on-rectangle-icon class="icon" />

@@ -1,63 +1,37 @@
-  <script setup lang="ts">
-  import { ref, watch } from 'vue';
-  import Cookies from 'js-cookie';
-  import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { useUpdateUser } from '@/composables/useUpdateUser';
 
-  const props = defineProps<{
-    userData: {
-      full_name: string;
-      email: string;
-      picture: string;
-      bio: string;
-    };
-  }>();
-
-  const router = useRouter();
-
-  const form = ref({
-    full_name: '',
-    email: '',
-    picture: '',
-    bio: ''
-  });
-
-  watch(
-    () => props.userData,
-    (newUserData) => {
-      form.value = { ...newUserData };
-    },
-    { immediate: true }
-  );
-
-  const userId = Cookies.get('userId');
-
-
-  const submitForm = async () => {
-    if (!userId) {
-      console.error('User ID not found in cookies');
-      return;
-    }
-
-    try {
-      const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/user/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.value),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update user data');
-      }
-
-      const updatedUser = await response.json();
-      console.log('User data updated:', updatedUser);
-      router.push({ name: 'home' });
-    } catch (error) {
-      console.error('Error updating user data:', error);
-    }
+const props = defineProps<{
+  userData: {
+    full_name: string;
+    email: string;
+    picture: string;
+    bio: string;
   };
+}>();
+
+const { updateUser } = useUpdateUser();
+
+const form = ref({
+  full_name: '',
+  email: '',
+  picture: '',
+  bio: ''
+});
+
+watch(
+  () => props.userData,
+  (newUserData) => {
+    form.value = { ...newUserData };
+  },
+  { immediate: true }
+);
+
+const submitForm = async () => {
+  await updateUser(form.value);
+};
+
 </script>
 
   <template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import Cookies from 'js-cookie';
+import { useFetchUserData } from '@/composables/useFetchUserData';
 import PageHeader from '../components/PageHeader.vue';
 import BlogList from '@/components/BlogList.vue';
 import EditForm from '@/components/EditForm.vue';
@@ -8,56 +8,28 @@ import CreateBlog from '@/components/CreateBlog.vue';
 
 
 
-const userId = Cookies.get('userId');
+const { userData, fetchUserData } = useFetchUserData();
+
 const searchQuery = ref<string>('');
-
-const userData = ref({
-    id: '',
-    full_name: '',
-    email: '',
-    picture: '',
-    bio: '',
-});
-
 const isEditVisible = ref(false);
 const isCreateVisible = ref(false);
 
 const toggleEditContainer = () => {
-    if (isCreateVisible.value == true) {
-        isCreateVisible.value = false;
-    }
-    isEditVisible.value = !isEditVisible.value;
+  if (isCreateVisible.value) {
+    isCreateVisible.value = false;
+  }
+  isEditVisible.value = !isEditVisible.value;
 };
 
 const toggleCreateContainer = () => {
-    if (isEditVisible.value == true) {
-        isEditVisible.value = false;
-    }
-    isCreateVisible.value = !isCreateVisible.value;
+  if (isEditVisible.value) {
+    isEditVisible.value = false;
+  }
+  isCreateVisible.value = !isCreateVisible.value;
 };
-
-
-
-const fetchUserData = async () => {
-    if (userId) {
-        try {
-            const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/user/${userId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch user data');
-            }
-            const data = await response.json();
-            userData.value = data;
-        } catch (error) {
-            console.error(error);
-        }
-    } else {
-        console.error('User ID not found in cookies');
-    }
-};
-
 
 onMounted(() => {
-    fetchUserData();
+  fetchUserData();
 });
 </script>
 
@@ -247,7 +219,7 @@ main {
 }
 
 .social-icon-div {
-    padding: 8px 8px 8px 8px;
+    padding: 8px;
     gap: 8px;
     border-radius: 6px;
     background-color: #696A75;
