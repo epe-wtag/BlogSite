@@ -1,54 +1,29 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { getBlog } from '../composables/getBlog';
 import PageHeader from '../components/PageHeader.vue';
 
-const route = useRoute();
-const blogId = route.params.blog_id;
-const blog = ref<any>(null);
-
-const fetchBlog = async () => {
-  const url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog/${blogId}`;
-
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    blog.value = data;
-  } catch (error) {
-    console.error('Error fetching blog data:', error);
-  }
-};
-
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
-}
-
-onMounted(() => {
-  fetchBlog();
-});
+const { blog, userId, formatDate, navigateToEdit } = getBlog();
 </script>
 
 <template>
   <main>
     <PageHeader :display="false"/>
-  <div class="blog-container" v-if="blog">
-    <div class="blog-category">{{ blog.category }}</div>
-    <h1 class="blog-title">{{ blog.title }}</h1>
-    <div class="blog-meta">
-      <img :src="blog.author.image" alt="Author Image" class="blog-author-image" />
-      <div class="blog-author-info">
-        <div class="blog-author">{{ blog.author.name }}</div>
-        <div class="blog-date">{{ formatDate(blog.created_at) }}</div>
+    <div class="blog-container" v-if="blog">
+      <div class="blog-category">{{ blog.category }}</div>
+      <h1 class="blog-title">{{ blog.title }}</h1>
+      <div class="blog-meta">
+        <img :src="blog.author.image" alt="Author Image" class="blog-author-image" />
+        <div class="blog-author-info">
+          <div class="blog-author">{{ blog.author.name }}</div>
+          <div class="blog-date">{{ formatDate(blog.created_at) }}</div>
+        </div>
+        <div v-if="userId === blog.author.id" @click="navigateToEdit" class="edit-button">
+          <pencil-square-icon class="edit-icon" />
+        </div>
       </div>
+      <img :src="blog.image" alt="blog Image" class="blog-image" />
+      <div class="blog-description" v-html="blog.description"></div>
     </div>
-    <img :src="blog.image" alt="blog Image" class="blog-image" />
-    <div class="blog-description" v-html="blog.description"></div>
-  </div>
   </main>
 </template>
 
@@ -76,6 +51,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  flex-direction: row;
 }
 
 .blog-author-image {
@@ -145,6 +121,17 @@ onMounted(() => {
   margin-top: 20px;
 }
 
+.edit-button {
+  width: 60%;
+  text-align: right;
+}
+
+.edit-icon {
+  text-align: right;
+  width: 20px;
+  height: 20px;
+}
+
 @media (max-width: 768px) {
   .blog-title {
     font-size: 1.5rem;
@@ -153,6 +140,12 @@ onMounted(() => {
 
   .blog-meta {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .edit-button {
+    text-align: left;
+    margin-top: 20px;
   }
 
   .blog-author-info {

@@ -1,63 +1,37 @@
-  <script setup lang="ts">
-  import { ref, watch } from 'vue';
-  import Cookies from 'js-cookie';
-  import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { useUpdateUser } from '@/composables/useUpdateUser';
 
-  const props = defineProps<{
-    userData: {
-      full_name: string;
-      email: string;
-      picture: string;
-      bio: string;
-    };
-  }>();
-
-  const router = useRouter();
-
-  const form = ref({
-    full_name: '',
-    email: '',
-    picture: '',
-    bio: ''
-  });
-
-  watch(
-    () => props.userData,
-    (newUserData) => {
-      form.value = { ...newUserData };
-    },
-    { immediate: true }
-  );
-
-  const userId = Cookies.get('userId');
-
-
-  const submitForm = async () => {
-    if (!userId) {
-      console.error('User ID not found in cookies');
-      return;
-    }
-
-    try {
-      const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/user/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.value),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update user data');
-      }
-
-      const updatedUser = await response.json();
-      console.log('User data updated:', updatedUser);
-      router.push({ name: 'home' });
-    } catch (error) {
-      console.error('Error updating user data:', error);
-    }
+const props = defineProps<{
+  userData: {
+    full_name: string;
+    email: string;
+    picture: string;
+    bio: string;
   };
+}>();
+
+const { updateUser } = useUpdateUser();
+
+const form = ref({
+  full_name: '',
+  email: '',
+  picture: '',
+  bio: ''
+});
+
+watch(
+  () => props.userData,
+  (newUserData) => {
+    form.value = { ...newUserData };
+  },
+  { immediate: true }
+);
+
+const submitForm = async () => {
+  await updateUser(form.value);
+};
+
 </script>
 
   <template>
@@ -223,94 +197,113 @@ textarea {
   background-color: #8769FF;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1250px) {
   .edit-form-container {
-    width: 90%;
+    width: 86%;
+    padding: 20px;
     height: auto;
+  }
+
+  .parts {
+    width: 100%;
+    flex-direction: column;
+    margin: 0 auto;
+  }
+
+  .part-1, .part-2 {
+    margin: 0 auto;
+  }
+
+  label {
+  max-width: 80%;
+  margin: 0 auto;
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  text-align: left;
+}
+
+  input,
+textarea {
+  max-width: 80%;
+  max-width: 80%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.form-group {
+  width: 86%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.button-div {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.submit-btn, .cancel-btn {
+    width: 40%;
+  }
+
+}
+
+@media (max-width: 768px) {
+  .parts {
+    flex-direction: column;
+  }
+
+  .part-2 {
+    margin-top: 20px;
+  }
+
+  .button-div {
+    flex-direction: column;
+  }
+
+  .submit-btn, .cancel-btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .edit-form-container {
     padding: 15px;
   }
 
   h2 {
-    text-align: center;
-    margin-bottom: 20px;
+    font-size: 24px;
   }
 
-  .form-group {
-    margin-bottom: 15px;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-  }
-
-  label {
-    width: 91%;
-    margin: 0 auto;
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    text-align: left;
-  }
-
-  input,
-  textarea {
-    width: 90%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  .button-div {
-    width: 91%;
-    height: 48px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 20px;
-  }
-
-  .submit-btn {
-    width: 144px;
-    height: 48px;
-    font-family: 'Work', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 28px;
-    text-align: center;
+  input, textarea {
     padding: 10px;
-    border-radius: 12px;
-    border: 1px solid #E8E8EA;
-    gap: 10px;
-    background-color: white;
-    color: black;
-
   }
 
-  .cancel-btn {
-    width: 144px;
-    height: 48px;
-    font-family: 'Work', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 28px;
-    text-align: center;
+  .submit-btn, .cancel-btn {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 350px) {
+  .edit-form-container {
     padding: 10px;
-    border-radius: 12px;
-    border: 1px solid #E8E8EA;
-    gap: 10px;
-    background-color: white;
   }
 
-  .active {
-    color: white;
-    background-color: #8769FF;
+  h2 {
+    font-size: 20px;
   }
 
+  .submit-btn, .cancel-btn {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
 }
 </style>
