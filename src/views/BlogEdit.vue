@@ -45,9 +45,9 @@ const handleUpdate = async () => {
   }
 };
 
-// Ensure blog data is fetched on component mount
+
 onMounted(() => {
-  fetchBlog(); // Fetch blog data
+  fetchBlog(); 
 });
 </script>
 
