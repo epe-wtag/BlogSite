@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, toRef } from 'vue';
 import { useRouter } from 'vue-router';
+import { useArticleStore } from '@/stores/articleStore';  
 import Cookies from 'js-cookie';
-import { useFetchArticles } from '@/composables/useFetchArticles';
 
 const props = defineProps<{
   searchQuery: string;
@@ -12,23 +12,23 @@ const props = defineProps<{
 const router = useRouter();
 const searchQueryRef = toRef(props, 'searchQuery');
 const myPostsRef = toRef(props, 'my_posts');
-const { articles, page, fetchArticles } = useFetchArticles(searchQueryRef, myPostsRef);
+const articleStore = useArticleStore();  
+
+const buttonText = computed(() => {
+  return Cookies.get('userId') ? 'Load More' : 'View More';
+});
 
 function loadMore() {
-  page.value += 1;
-  fetchArticles(true);
+  articleStore.page += 1;  
+  articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value, true);
 }
 
 function navigateToBlog(blogId: string) {
   router.push({ name: 'BlogPage', params: { blog_id: blogId } });
 }
 
-const buttonText = computed(() => {
-  return Cookies.get('userId') ? 'Load More' : 'View More';
-});
-
 onMounted(() => {
-  fetchArticles();
+  articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value); 
 });
 
 function formatDate(timestamp: number) {
@@ -44,7 +44,7 @@ function formatDate(timestamp: number) {
 <template>
   <div class="blog-list">
     <div 
-      v-for="(article, index) in articles" 
+      v-for="(article, index) in articleStore.articles" 
       :key="index" 
       class="blog-item"
       @click="navigateToBlog(article.id)" 
