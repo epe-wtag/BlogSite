@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import PageHeader from '../components/PageHeader.vue';
 import introImage from '../assets/landing_intro.png';
 import BlogList from '@/components/BlogList.vue';
+import ErrorBoundary from '@/components/ErrorBoundary.vue';
 
 const latestArticle = ref<any>(null);
 const searchQuery = ref<string>(''); 
@@ -53,32 +54,38 @@ onMounted(() => {
     <div class="landing-container-wrap">
       <div class="landing-intro-image-container">
         <img :src="introImage" alt="Intro Image" class="landing-intro-image" />
-        <div v-if="latestArticle" class="landing-top-blog-div">
-          <div class="landing-blog-post">
-            <div class="landing-blog-post-heading">
-              <div class="landing-blog-post-badge">
-                <span class="landing-blog-post-badge-text">
-                  {{ latestArticle.source }}
-                </span>
+        
+        <ErrorBoundary>
+          <div v-if="latestArticle" class="landing-top-blog-div">
+            <div class="landing-blog-post">
+              <div class="landing-blog-post-heading">
+                <div class="landing-blog-post-badge">
+                  <span class="landing-blog-post-badge-text">
+                    {{ latestArticle.source }}
+                  </span>
+                </div>
+                <h2 class="landing-blog-post-title">{{ latestArticle.title }}</h2>
               </div>
-
-              <h2 class="landing-blog-post-title">{{ latestArticle.title }}</h2>
-            </div>
-            <div class="landing-blog-post-meta">
-              <div class="landing-blog-post-author-div">
-                <img :src="latestArticle.image || introImage" alt="Author Image" class="landing-blog-post-author-image"/>
-                <span class="landing-blog-post-author">{{ latestArticle.author }}</span>
+              <div class="landing-blog-post-meta">
+                <div class="landing-blog-post-author-div">
+                  <img :src="latestArticle.image || introImage" alt="Author Image" class="landing-blog-post-author-image"/>
+                  <span class="landing-blog-post-author">{{ latestArticle.author }}</span>
+                </div>
+                <span class="landing-blog-post-date">{{ latestArticle.publishedAt }}</span>
               </div>
-              <span class="landing-blog-post-date">{{ latestArticle.publishedAt }}</span>
             </div>
           </div>
-        </div>
+        </ErrorBoundary>
       </div>
+      
       <div class="landing-news-container">
         <div class="landing-container-heading">
           <h3 class="landing-container-heading-text">Latest Post</h3>
         </div>
-        <BlogList :searchQuery="searchQuery" :my_posts="false" />
+
+        <ErrorBoundary>
+          <BlogList :searchQuery="searchQuery" :my_posts="false" />
+        </ErrorBoundary>
       </div>
     </div>
   </main>
