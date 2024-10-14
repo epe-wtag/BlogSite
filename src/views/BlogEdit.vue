@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { getBlog } from '@/composables/getBlog';
 import { updateBlog } from '@/composables/updateBlog';
 import PageHeader from '@/components/PageHeader.vue';
+import TextEditor from '@/components/TextEditor.vue';
 
 const { blog, userId, formatDate, fetchBlog } = getBlog(); 
 const router = useRouter();
@@ -67,7 +68,7 @@ onMounted(() => {
         </div>
         <div class="form-group">
           <label for="description">Description</label>
-          <textarea v-model="description" id="description" required></textarea>
+          <TextEditor v-model="description" id="description" class="description"/>
         </div>
         <div class="form-group">
           <label for="image">Image URL</label>
@@ -132,5 +133,12 @@ button {
 
 button:hover {
   font-weight: 600;
+}
+
+.description {
+  width: 100%!important;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 </style>

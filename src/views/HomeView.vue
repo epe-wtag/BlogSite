@@ -5,7 +5,7 @@ import introImage from '../assets/landing_intro.png';
 import BlogList from '@/components/BlogList.vue';
 
 const latestArticle = ref<any>(null);
-const searchQuery = ref<string>('');
+const searchQuery = ref<string>(''); 
 
 const fetchLatestNews = async () => {
   const url = 'https://66bc281924da2de7ff69786f.mockapi.io/Blog/1';
