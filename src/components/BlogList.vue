@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, toRef } from 'vue';
+import { computed, onMounted, toRef, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useArticleStore } from '@/stores/articleStore';  
 import Cookies from 'js-cookie';
+import { formatDate } from '@/utils';
 
 const props = defineProps<{
   searchQuery: string;
@@ -18,6 +19,18 @@ const buttonText = computed(() => {
   return Cookies.get('userId') ? 'Load More' : 'View More';
 });
 
+const filteredArticles = computed(() => {
+  return articleStore.articles.filter(article => {
+    const lowerCaseQuery = searchQueryRef.value.toLowerCase();
+    return (
+      article.title.toLowerCase().includes(lowerCaseQuery) || 
+      article.category.toLowerCase().includes(lowerCaseQuery) || 
+      article.description.toLowerCase().includes(lowerCaseQuery) || 
+      article.author.name.toLowerCase().includes(lowerCaseQuery)
+    );
+  });
+});
+
 function loadMore() {
   articleStore.page += 1;  
   articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value, true);
@@ -31,20 +44,22 @@ onMounted(() => {
   articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value); 
 });
 
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
-}
+
+watch(searchQueryRef, (newQuery) => {
+  articleStore.fetchArticles(newQuery, myPostsRef.value);
+});
+
+watch(myPostsRef, (newMyPosts) => {
+  articleStore.fetchArticles(searchQueryRef.value, newMyPosts);
+});
+
 </script>
+
 
 <template>
   <div class="blog-list">
     <div 
-      v-for="(article, index) in articleStore.articles" 
+      v-for="(article, index) in filteredArticles" 
       :key="index" 
       class="blog-item"
       @click="navigateToBlog(article.id)" 

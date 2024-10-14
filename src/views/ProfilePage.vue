@@ -6,8 +6,6 @@ import BlogList from '@/components/BlogList.vue';
 import EditForm from '@/components/EditForm.vue';
 import CreateBlog from '@/components/CreateBlog.vue';
 
-
-
 const { userData, fetchUserData } = useFetchUserData();
 
 const searchQuery = ref<string>('');

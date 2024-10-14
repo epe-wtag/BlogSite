@@ -1,10 +1,8 @@
-import { ref } from 'vue';
-
 export function postBlog() {
-  const data = ref(null);
-  const error = ref<Error | null>(null);
+  const CreateNewBlog = async (endpoint: string, payload: object): Promise<[any, Error | null]> => {
+    let data = null;
+    let error = null;
 
-  const post = async (endpoint: string, payload: object) => {
     try {
       const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/${endpoint}`, {
         method: 'POST',
@@ -18,11 +16,13 @@ export function postBlog() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      data.value = await response.json();
+      data = await response.json();
     } catch (err) {
-      error.value = err as Error; 
+      error = err as Error;
     }
+
+    return [data, error];
   };
 
-  return { data, error, post };
+  return { CreateNewBlog };
 }

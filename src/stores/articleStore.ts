@@ -14,8 +14,6 @@ export const useArticleStore = defineStore('article', () => {
       url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog?page=${page.value}&limit=1000`;
     }
 
-    console.log(`Fetching articles from URL: ${url}`);
-
     try {
       const response = await fetch(url);
       const data = await response.json();
@@ -30,7 +28,9 @@ export const useArticleStore = defineStore('article', () => {
       }
 
       if (myPosts && userId) {
-        filteredData = filteredData.filter((article: any) => article.author?.id === userId);
+        filteredData = filteredData.filter((article: any) => {
+          return article.author?.id === userId;
+        });
       }
 
       if (isLoadMore) {
