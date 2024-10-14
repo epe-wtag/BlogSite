@@ -1,4 +1,3 @@
-import { ref } from 'vue';
 import Cookies from 'js-cookie';
 import { useRouter } from 'vue-router';
 
