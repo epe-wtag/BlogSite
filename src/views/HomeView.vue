@@ -7,6 +7,7 @@ import ErrorBoundary from '@/components/ErrorBoundary.vue';
 
 const latestArticle = ref<any>(null);
 const searchQuery = ref<string>(''); 
+const error = ref<Error | null>(null);
 
 const fetchLatestNews = async () => {
   const url = 'https://66bc281924da2de7ff69786f.mockapi.io/Blog/1';
@@ -24,8 +25,17 @@ const fetchLatestNews = async () => {
         publishedAt: formatDate(data.created_at)
       };
     }
-  } catch (error) {
-    console.error('Error fetching latest news:', error);
+    // hello bhaia, To see the error handler, you can use the code below:
+    // throw new Error('Intentional error for testing ErrorBoundary');
+
+
+  } catch (err) {
+    console.error('Error fetching latest news:', err);
+    if (err instanceof Error) {
+      error.value = err;
+    } else {
+      error.value = new Error('An unknown error occurred');
+    }
   }
 };
 
@@ -55,7 +65,7 @@ onMounted(() => {
       <div class="landing-intro-image-container">
         <img :src="introImage" alt="Intro Image" class="landing-intro-image" />
         
-        <ErrorBoundary>
+        <ErrorBoundary :error="error" :errorMessage="'Failed to load latest article. Please try again.'">
           <div v-if="latestArticle" class="landing-top-blog-div">
             <div class="landing-blog-post">
               <div class="landing-blog-post-heading">
@@ -83,7 +93,7 @@ onMounted(() => {
           <h3 class="landing-container-heading-text">Latest Post</h3>
         </div>
 
-        <ErrorBoundary>
+        <ErrorBoundary :error="error" :errorMessage="'Failed to load blog list.'">
           <BlogList :searchQuery="searchQuery" :my_posts="false" />
         </ErrorBoundary>
       </div>

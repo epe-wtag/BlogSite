@@ -1,7 +1,9 @@
 <template>
   <div>
     <div v-if="error">
-      <p>Error occurred: {{ errorMessage }}</p>
+      <slot name="error-message">
+        <p>Error occurred: {{ errorMessage }}</p>
+      </slot>
       <button @click="retry">Retry</button>
     </div>
     <div v-else>
@@ -12,23 +14,38 @@
 
 <script>
 export default {
+  props: {
+    error: {
+      type: Error,
+      default: null,
+    },
+    errorMessage: {
+      type: String,
+      default: '',
+    },
+  },
   data() {
     return {
-      error: null,
-      errorMessage: '',
+      internalError: null,
     };
+  },
+  watch: {
+    error(newError) {
+      if (newError) {
+        this.internalError = newError;
+      }
+    },
   },
   methods: {
     retry() {
-      this.error = null;
-      this.errorMessage = '';
-      this.$forceUpdate(); 
+      this.internalError = null;
+      this.$emit('retry');
     },
   },
   errorCaptured(error, vm, info) {
-    this.error = error;
-    this.errorMessage = `An error occurred: ${info}`;
-    return false; 
+    this.internalError = error;
+    this.$emit('error-captured', `An error occurred: ${info}`);
+    return false;
   },
 };
 </script>
@@ -36,6 +53,10 @@ export default {
 <style scoped>
 p {
   color: red;
+  padding: 10px;
+  border: 1px solid red;
+  border-radius: 5px;
+  background-color: #ffe6e6;
 }
 button {
   margin-top: 10px;
