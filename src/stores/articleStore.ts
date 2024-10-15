@@ -8,11 +8,12 @@ export const useArticleStore = defineStore('article', () => {
   const userId = Cookies.get('userId');
 
   const fetchArticles = async (searchQuery: string, myPosts: boolean, isLoadMore = false) => {
-    let url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog?page=${page.value}&limit=3`;
+    const params = new URLSearchParams();
+    params.append('page', page.value.toString());
+    params.append('limit', (myPosts && userId) || searchQuery ? '1000' : '3');
 
-    if (myPosts && userId) {
-      url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog?page=${page.value}&limit=1000`;
-    }
+    const url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog?${params.toString()}`;
+    console.log(`Fetching articles from URL: ${url}`);
 
     try {
       const response = await fetch(url);
@@ -28,16 +29,14 @@ export const useArticleStore = defineStore('article', () => {
       }
 
       if (myPosts && userId) {
-        filteredData = filteredData.filter((article: any) => {
-          return article.author?.id === userId;
-        });
+        filteredData = filteredData.filter((article: any) => article.author?.id === userId);
       }
 
       if (isLoadMore) {
         articles.value.push(...filteredData);
       } else {
         articles.value = filteredData;
-        page.value = 1; 
+        page.value = 1;
       }
     } catch (error) {
       console.error('Error fetching articles:', error);

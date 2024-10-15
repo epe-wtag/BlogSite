@@ -5,11 +5,13 @@
     <form @submit.prevent="handleLogin">
       <div class="form-group">
         <label for="email">Email:</label>
-        <input type="email" id="email" v-model="email" required />
+        <input type="email" id="email" v-model="email" @input="validateEmail" required />
+        <span v-if="emailError" class="error">{{ emailError }}</span>
       </div>
       <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password" id="password" v-model="password" required />
+        <input type="password" id="password" v-model="password" @input="validatePassword" required />
+        <span v-if="passwordError" class="error">{{ passwordError }}</span>
       </div>
       <button type="submit">Log In</button>
     </form>
@@ -24,9 +26,27 @@ import Cookies from 'js-cookie';
 
 const email = ref('');
 const password = ref('');
+const emailError = ref('');
+const passwordError = ref('');
 const router = useRouter();
 
+const validateEmail = () => {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  emailError.value = emailPattern.test(email.value) ? '' : 'Invalid email format';
+};
+
+const validatePassword = () => {
+  passwordError.value = password.value.length >= 6 ? '' : 'Passwords for this site are generally at least 6 characters long';
+};
+
 const handleLogin = async () => {
+  validateEmail();
+  validatePassword();
+
+  if (emailError.value || passwordError.value) {
+    return;
+  }
+
   try {
     const response = await fetch(`https://66bc281924da2de7ff69786f.mockapi.io/user?email=${email.value}&password=${password.value}`);
     const data = await response.json();
@@ -66,8 +86,7 @@ h2 {
 
 .form-group {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  flex-direction: column;
   margin-bottom: 1em;
 }
 
@@ -77,15 +96,19 @@ label {
   font-weight: bold;
   text-align: left;
   padding-left: 2px;
-  margin-right: 10px;
-  margin-top: 10px;
 }
 
 input {
-  width: 70%;
+  width: 100%;
   padding: .5em;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.error {
+  color: red;
+  font-size: 0.8em;
+  margin-top: 0.5em;
 }
 
 button {

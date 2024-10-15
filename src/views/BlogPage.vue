@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { getBlog } from '../composables/getBlog';
 import PageHeader from '../components/PageHeader.vue';
+import DataLoader from '@/components/DataLoader.vue';
 
-const { blog, userId, formatDate, navigateToEdit } = getBlog();
+const { blog, userId, loading, formatDate, navigateToEdit } = getBlog();
+
 </script>
 
 <template>
   <main>
     <PageHeader :display="false"/>
+    <DataLoader v-if="loading" />
     <div class="blog-container" v-if="blog">
       <div class="blog-category">{{ blog.category }}</div>
       <h1 class="blog-title">{{ blog.title }}</h1>
