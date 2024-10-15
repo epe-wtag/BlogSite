@@ -10,7 +10,7 @@ export const useArticleStore = defineStore('article', () => {
   const fetchArticles = async (searchQuery: string, myPosts: boolean, isLoadMore = false) => {
     const params = new URLSearchParams();
     params.append('page', page.value.toString());
-    params.append('limit', myPosts && userId ? '1000' : '3');
+    params.append('limit', (myPosts && userId) || searchQuery ? '1000' : '3');
 
     const url = `https://66bc281924da2de7ff69786f.mockapi.io/Blog?${params.toString()}`;
     console.log(`Fetching articles from URL: ${url}`);
