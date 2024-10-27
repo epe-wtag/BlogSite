@@ -36,7 +36,7 @@ const validateEmail = () => {
 };
 
 const validatePassword = () => {
-  passwordError.value = password.value.length >= 6 ? '' : 'Passwords for this site are generally at least 6 characters long';
+  passwordError.value = password.value.length >= 4 ? '' : 'Passwords for this site are generally at least 6 characters long';
 };
 
 const handleLogin = async () => {

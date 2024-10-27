@@ -1,11 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import Cookies from 'js-cookie';
+import { formatDate } from '@/utils';
 
 export const useArticleStore = defineStore('article', () => {
   const articles = ref<any[]>([]);
+  const latestArticle = ref<any | null>(null);
   const page = ref<number>(1);
   const userId = Cookies.get('userId');
+  const error = ref<Error | null>(null);
 
   const fetchArticles = async (searchQuery: string, myPosts: boolean, isLoadMore = false) => {
     const params = new URLSearchParams();
@@ -43,9 +46,33 @@ export const useArticleStore = defineStore('article', () => {
     }
   };
 
+  const fetchLatestNews = async () => {
+    const url = 'https://66bc281924da2de7ff69786f.mockapi.io/Blog/1';
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data) {
+        latestArticle.value = {
+          title: data.title,
+          description: data.description,
+          author: data.author?.name || 'Unknown',
+          source: data.category,
+          image: data.author?.image,
+          publishedAt: formatDate(data.created_at)
+        };
+      }
+    } catch (err) {
+      console.error('Error fetching latest news:', err);
+      error.value = err instanceof Error ? err : new Error('An unknown error occurred');
+    }
+  };
+
   return {
     articles,
     page,
     fetchArticles,
+    latestArticle,
+    fetchLatestNews,
+    error
   };
 });

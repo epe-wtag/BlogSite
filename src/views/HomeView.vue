@@ -1,52 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useArticleStore } from '@/stores/articleStore';
 import PageHeader from '../components/PageHeader.vue';
 import introImage from '../assets/landing_intro.png';
 import BlogList from '@/components/BlogList.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 
+const articleStore = useArticleStore();
 const latestArticle = ref<any>(null);
 const searchQuery = ref<string>(''); 
 const error = ref<Error | null>(null);
-
-const fetchLatestNews = async () => {
-  const url = 'https://66bc281924da2de7ff69786f.mockapi.io/Blog/1';
-
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data) {
-      latestArticle.value = {
-        title: data.title,
-        description: data.description,
-        author: data.author.name || 'Unknown',
-        source: data.category,
-        image: data.author.image,
-        publishedAt: formatDate(data.created_at)
-      };
-    }
-    // hello bhaia, To see the error handler, you can use the code below:
-    // throw new Error('Intentional error for testing ErrorBoundary');
-
-
-  } catch (err) {
-    console.error('Error fetching latest news:', err);
-    if (err instanceof Error) {
-      error.value = err;
-    } else {
-      error.value = new Error('An unknown error occurred');
-    }
-  }
-};
-
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000); 
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(date);
-}
 
 const handleSearch = (query: string) => {
   searchQuery.value = query;
@@ -54,7 +17,7 @@ const handleSearch = (query: string) => {
 };
 
 onMounted(() => {
-  fetchLatestNews();
+  articleStore.fetchLatestNews();
 });
 </script>
 
