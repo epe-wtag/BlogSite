@@ -6,7 +6,8 @@ import { updateBlog } from '@/composables/updateBlog';
 import PageHeader from '@/components/PageHeader.vue';
 import TextEditor from '@/components/TextEditor.vue';
 
-const { blog, userId, formatDate, fetchBlog } = getBlog(); 
+const { blog, fetchBlog } = getBlog();
+
 const router = useRouter();
 const { error, update } = updateBlog();
 

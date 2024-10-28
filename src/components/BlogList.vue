@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, toRef, watch } from 'vue';
+import { computed, onMounted, toRef, watch, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useArticleStore } from '@/stores/articleStore';  
 import Cookies from 'js-cookie';
 import { formatDate } from '@/utils';
+import DataLoader from '@/components/DataLoader.vue';
 
 const props = defineProps<{
   searchQuery: string;
   my_posts: boolean;
 }>();
+
+const loading = ref(false);
 
 const router = useRouter();
 const searchQueryRef = toRef(props, 'searchQuery');
@@ -31,26 +34,34 @@ const filteredArticles = computed(() => {
   });
 });
 
-function loadMore() {
+async function loadMore() {
+  loading.value = true; 
   articleStore.page += 1;  
-  articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value, true);
+  await articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value, true);
+  loading.value = false;
 }
 
 function navigateToBlog(blogId: string) {
   router.push({ name: 'BlogPage', params: { blog_id: blogId } });
 }
 
-onMounted(() => {
-  articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value); 
+onMounted(async () => {
+  loading.value = true; 
+  await articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value); 
+  loading.value = false; 
 });
 
 
-watch(searchQueryRef, (newQuery) => {
-  articleStore.fetchArticles(newQuery, myPostsRef.value);
+watch(searchQueryRef, async (newQuery) => {
+  loading.value = true; 
+  await articleStore.fetchArticles(newQuery, myPostsRef.value);
+  loading.value = false; 
 });
 
-watch(myPostsRef, (newMyPosts) => {
-  articleStore.fetchArticles(searchQueryRef.value, newMyPosts);
+watch(myPostsRef, async (newMyPosts) => {
+  loading.value = true; 
+  await articleStore.fetchArticles(searchQueryRef.value, newMyPosts);
+  loading.value = false; 
 });
 
 </script>
@@ -58,6 +69,7 @@ watch(myPostsRef, (newMyPosts) => {
 
 <template>
   <div class="blog-list">
+    <DataLoader v-if="loading" /> 
     <div 
       v-for="(article, index) in filteredArticles" 
       :key="index" 
