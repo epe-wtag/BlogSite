@@ -1,16 +1,31 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import Cookies from 'js-cookie';
-import { formatDate } from '@/utils';
+
+
+interface Article {
+  title: string;
+  description: string;
+  author: {
+    id?: string;
+    name?: string;
+    image?: string;
+  };
+  category: string;
+  created_at: string;
+  source?: string; 
+}
 
 export const useArticleStore = defineStore('article', () => {
-  const articles = ref<any[]>([]);
-  const latestArticle = ref<any | null>(null);
+  const articles = ref<Article[]>([]);
+  const latestArticle = ref<Article | null>(null);
   const page = ref<number>(1);
   const userId = Cookies.get('userId');
   const error = ref<Error | null>(null);
+  const isLoading = ref<boolean>(false); 
 
   const fetchArticles = async (searchQuery: string, myPosts: boolean, isLoadMore = false) => {
+    isLoading.value = true; 
     const params = new URLSearchParams();
     params.append('page', page.value.toString());
     params.append('limit', (myPosts && userId) || searchQuery ? '1000' : '3');
@@ -25,24 +40,27 @@ export const useArticleStore = defineStore('article', () => {
       let filteredData = data;
 
       if (searchQuery) {
-        filteredData = filteredData.filter((article: any) =>
+        filteredData = filteredData.filter((article: Article) =>
           article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           article.category.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
 
       if (myPosts && userId) {
-        filteredData = filteredData.filter((article: any) => article.author?.id === userId);
+        filteredData = filteredData.filter((article: Article) => article.author?.id === userId);
       }
 
       if (isLoadMore) {
         articles.value.push(...filteredData);
       } else {
         articles.value = filteredData;
-        page.value = 1;
+        page.value = 1; 
       }
-    } catch (error) {
-      console.error('Error fetching articles:', error);
+    } catch (fetchError) {
+      console.error('Error fetching articles:', fetchError);
+      error.value = fetchError instanceof Error ? fetchError : new Error('An unknown error occurred');
+    } finally {
+      isLoading.value = false; 
     }
   };
 
@@ -55,11 +73,15 @@ export const useArticleStore = defineStore('article', () => {
         latestArticle.value = {
           title: data.title,
           description: data.description,
-          author: data.author?.name || 'Unknown',
-          source: data.category,
-          image: data.author?.image,
-          publishedAt: formatDate(data.created_at)
-        };
+          author: {
+            id: data.author?.id,
+            name: data.author?.name || 'Unknown',
+            image: data.author?.image,
+          },
+          category: data.category,
+          created_at: data.created_at,
+          source: data.category, 
+        } as Article;
       }
     } catch (err) {
       console.error('Error fetching latest news:', err);
@@ -73,6 +95,7 @@ export const useArticleStore = defineStore('article', () => {
     fetchArticles,
     latestArticle,
     fetchLatestNews,
-    error
+    error,
+    isLoading,
   };
 });

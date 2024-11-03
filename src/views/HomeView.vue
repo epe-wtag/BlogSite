@@ -1,23 +1,69 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useArticleStore } from '@/stores/articleStore';
 import PageHeader from '../components/PageHeader.vue';
 import introImage from '../assets/landing_intro.png';
 import BlogList from '@/components/BlogList.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
+import Cookies from 'js-cookie';
+import { formatDate } from '@/utils';
 
 const articleStore = useArticleStore();
 const latestArticle = ref<any>(null);
 const searchQuery = ref<string>(''); 
+const loading = ref(false);
+const articles = computed(() => articleStore.articles);
+const myPosts = ref(false); 
 const error = ref<Error | null>(null);
+
+const buttonText = computed(() => {
+  return Cookies.get('userId') ? 'Load More' : 'View More';
+});
+
+async function fetchArticles(loadMore = false) {
+  loading.value = true;
+  if (loadMore) {
+    articleStore.page += 1; 
+  } else {
+    articleStore.page = 1; 
+  }
+  try {
+    await articleStore.fetchArticles(searchQuery.value, myPosts.value, loadMore);
+  } catch (err) {
+    error.value = err as Error;
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function fetchLatestNews() {
+  try {
+    await articleStore.fetchLatestNews();
+    latestArticle.value = articleStore.latestArticle; 
+  } catch (err) {
+    error.value = err as Error;
+  }
+}
 
 const handleSearch = (query: string) => {
   searchQuery.value = query;
-  console.log('Search query received in homePage:', searchQuery.value);
+  fetchArticles();
 };
 
+const handleMyPostsChange = () => {
+  fetchArticles(); 
+};
+
+function handleLoadMore() {
+  fetchArticles(true); 
+}
+
+watch(searchQuery, handleSearch);
+watch(myPosts, handleMyPostsChange);
+
 onMounted(() => {
-  articleStore.fetchLatestNews();
+  fetchLatestNews(); 
+  fetchArticles(); 
 });
 </script>
 
@@ -27,7 +73,7 @@ onMounted(() => {
     <div class="landing-container-wrap">
       <div class="landing-intro-image-container">
         <img :src="introImage" alt="Intro Image" class="landing-intro-image" />
-        
+
         <ErrorBoundary :error="error" :errorMessage="'Failed to load latest article. Please try again.'">
           <div v-if="latestArticle" class="landing-top-blog-div">
             <div class="landing-blog-post">
@@ -42,27 +88,35 @@ onMounted(() => {
               <div class="landing-blog-post-meta">
                 <div class="landing-blog-post-author-div">
                   <img :src="latestArticle.image || introImage" alt="Author Image" class="landing-blog-post-author-image"/>
-                  <span class="landing-blog-post-author">{{ latestArticle.author }}</span>
+                  <span class="landing-blog-post-author">{{ latestArticle.author.name }}</span>
                 </div>
-                <span class="landing-blog-post-date">{{ latestArticle.publishedAt }}</span>
+                <span class="landing-blog-post-date">{{ formatDate(latestArticle.created_at) }}</span>
               </div>
             </div>
           </div>
         </ErrorBoundary>
       </div>
-      
+
       <div class="landing-news-container">
         <div class="landing-container-heading">
           <h3 class="landing-container-heading-text">Latest Post</h3>
         </div>
 
         <ErrorBoundary :error="error" :errorMessage="'Failed to load blog list.'">
-          <BlogList :searchQuery="searchQuery" :my_posts="false" />
+          <BlogList 
+            :searchQuery="searchQuery" 
+            :my_posts="myPosts" 
+            :articles="articles" 
+            :loading="loading" 
+            :buttonText="buttonText" 
+            @loadMore="handleLoadMore" 
+          />
         </ErrorBoundary>
       </div>
     </div>
   </main>
 </template>
+
 
 <style scoped>
 
