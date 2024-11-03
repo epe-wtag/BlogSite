@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useFetchUserData } from '@/composables/useFetchUserData';
 import PageHeader from '../components/PageHeader.vue';
+import { useArticleStore } from '@/stores/articleStore';
 import BlogList from '@/components/BlogList.vue';
 import EditForm from '@/components/EditForm.vue';
 import CreateBlog from '@/components/CreateBlog.vue';
 
-
-
 const { userData, fetchUserData } = useFetchUserData();
+const articleStore = useArticleStore();
 
 const searchQuery = ref<string>('');
 const isEditVisible = ref(false);
 const isCreateVisible = ref(false);
+const loading = ref(false);
+const error = ref<Error | null>(null);
+const articles = computed(() => articleStore.articles);
+const myPosts = ref(true);
 
 const toggleEditContainer = () => {
   if (isCreateVisible.value) {
@@ -28,8 +32,30 @@ const toggleCreateContainer = () => {
   isCreateVisible.value = !isCreateVisible.value;
 };
 
+async function fetchArticles(loadMore = false) {
+  loading.value = true;
+  if (loadMore) {
+    articleStore.page += 1; 
+  } else {
+    articleStore.page = 1; 
+  }
+  try {
+    await articleStore.fetchArticles(searchQuery.value, myPosts.value, loadMore);
+  } catch (err) {
+    error.value = err as Error;
+  } finally {
+    loading.value = false;
+  }
+}
+
+function handleLoadMore() {
+  fetchArticles(true);
+}
+
+
 onMounted(() => {
   fetchUserData();
+  fetchArticles();
 });
 </script>
 
@@ -94,7 +120,13 @@ onMounted(() => {
                 My Published Blogs
             </div>
             <div class="blog-container">
-                <BlogList :searchQuery="searchQuery" :my_posts="true" />
+                <BlogList 
+                    :searchQuery="searchQuery" 
+                    :my_posts="myPosts" 
+                    :articles="articles" 
+                    :loading="loading" 
+                    @loadMore="handleLoadMore"
+                    />
             </div>
 
         </div>

@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { postBlog } from '@/composables/postBlog';
+import TextEditor from './TextEditor.vue';
 
 const props = defineProps<{
   author: {
@@ -16,7 +17,7 @@ const title = ref('');
 const description = ref('');
 const image = ref('');
 const router = useRouter();
-const { error, post } = postBlog();
+const { CreateNewBlog } = postBlog();
 
 const handleSubmit = async () => {
   const blogData = {
@@ -28,10 +29,10 @@ const handleSubmit = async () => {
     image: image.value,
   };
 
-  await post('Blog', blogData);
+  const [, error] = await CreateNewBlog('Blog', blogData);
 
-  if (error.value) {
-    console.error('Failed to create blog:', error.value);
+  if (error) {
+    console.error('Failed to create blog:', error);
   } else {
     router.push({ name: 'home' });
   }
@@ -52,7 +53,7 @@ const handleSubmit = async () => {
       </div>
       <div class="form-group">
         <label class="label" for="description">Description</label>
-        <textarea v-model="description" id="description" required></textarea>
+        <TextEditor v-model="description" id="description" class="description"/>
       </div>
       <div class="form-group">
         <label  class="label" for="image">Image URL</label>
@@ -190,6 +191,14 @@ textarea {
   justify-content: center;
   gap: 10px;
   margin-top: 30px;
+}
+.description {
+  max-width: 80%;
+  max-width: 80%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: left;
 }
 }
 </style>

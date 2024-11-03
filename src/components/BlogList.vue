@@ -1,50 +1,52 @@
 <script setup lang="ts">
-import { computed, onMounted, toRef } from 'vue';
+import { computed, toRef, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
+import { defineProps } from 'vue';
 import Cookies from 'js-cookie';
-import { useFetchArticles } from '@/composables/useFetchArticles';
+import { formatDate } from '@/utils';
+
+const emit = defineEmits(['loadMore']);
 
 const props = defineProps<{
   searchQuery: string;
-  my_posts: boolean;
+  articles: Array<any>; 
+  my_posts?: boolean;    
+  loading?: boolean;     
+  buttonText?: string;  
 }>();
 
 const router = useRouter();
 const searchQueryRef = toRef(props, 'searchQuery');
-const myPostsRef = toRef(props, 'my_posts');
-const { articles, page, fetchArticles } = useFetchArticles(searchQueryRef, myPostsRef);
 
-function loadMore() {
-  page.value += 1;
-  fetchArticles(true);
+const buttonText = computed(() => {
+  return props.buttonText || (Cookies.get('userId') ? 'Load More' : 'View More'); 
+});
+
+const filteredArticles = computed(() => {
+  return props.articles.filter(article => {
+    const lowerCaseQuery = searchQueryRef.value.toLowerCase();
+    return (
+      article.title.toLowerCase().includes(lowerCaseQuery) || 
+      article.category.toLowerCase().includes(lowerCaseQuery) || 
+      article.description.toLowerCase().includes(lowerCaseQuery) || 
+      article.author.name.toLowerCase().includes(lowerCaseQuery)
+    );
+  });
+});
+
+function handleLoadMore() {
+  emit('loadMore');
 }
 
 function navigateToBlog(blogId: string) {
   router.push({ name: 'BlogPage', params: { blog_id: blogId } });
-}
-
-const buttonText = computed(() => {
-  return Cookies.get('userId') ? 'Load More' : 'View More';
-});
-
-onMounted(() => {
-  fetchArticles();
-});
-
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
 }
 </script>
 
 <template>
   <div class="blog-list">
     <div 
-      v-for="(article, index) in articles" 
+      v-for="(article, index) in filteredArticles" 
       :key="index" 
       class="blog-item"
       @click="navigateToBlog(article.id)" 
@@ -66,7 +68,7 @@ function formatDate(timestamp: number) {
     </div>
   </div>
   <div class="view-more-button-div">
-    <button @click="loadMore" class="view-more-button">{{ buttonText }}</button>
+    <button @click="handleLoadMore" class="view-more-button">{{ buttonText }}</button>
   </div>
 </template>
 

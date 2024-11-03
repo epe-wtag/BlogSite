@@ -1,49 +1,69 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
+import { useArticleStore } from '@/stores/articleStore';
 import PageHeader from '../components/PageHeader.vue';
 import introImage from '../assets/landing_intro.png';
 import BlogList from '@/components/BlogList.vue';
+import ErrorBoundary from '@/components/ErrorBoundary.vue';
+import Cookies from 'js-cookie';
+import { formatDate } from '@/utils';
 
+const articleStore = useArticleStore();
 const latestArticle = ref<any>(null);
-const searchQuery = ref<string>('');
+const searchQuery = ref<string>(''); 
+const loading = ref(false);
+const articles = computed(() => articleStore.articles);
+const myPosts = ref(false); 
+const error = ref<Error | null>(null);
 
-const fetchLatestNews = async () => {
-  const url = 'https://66bc281924da2de7ff69786f.mockapi.io/Blog/1';
+const buttonText = computed(() => {
+  return Cookies.get('userId') ? 'Load More' : 'View More';
+});
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data) {
-      latestArticle.value = {
-        title: data.title,
-        description: data.description,
-        author: data.author.name || 'Unknown',
-        source: data.category,
-        image: data.author.image,
-        publishedAt: formatDate(data.created_at)
-      };
-    }
-  } catch (error) {
-    console.error('Error fetching latest news:', error);
+async function fetchArticles(loadMore = false) {
+  loading.value = true;
+  if (loadMore) {
+    articleStore.page += 1; 
+  } else {
+    articleStore.page = 1; 
   }
-};
+  try {
+    await articleStore.fetchArticles(searchQuery.value, myPosts.value, loadMore);
+  } catch (err) {
+    error.value = err as Error;
+  } finally {
+    loading.value = false;
+  }
+}
 
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000); 
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(date);
+async function fetchLatestNews() {
+  try {
+    await articleStore.fetchLatestNews();
+    latestArticle.value = articleStore.latestArticle; 
+  } catch (err) {
+    error.value = err as Error;
+  }
 }
 
 const handleSearch = (query: string) => {
   searchQuery.value = query;
-  console.log('Search query received in homePage:', searchQuery.value);
+  fetchArticles();
 };
 
+const handleMyPostsChange = () => {
+  fetchArticles(); 
+};
+
+function handleLoadMore() {
+  fetchArticles(true); 
+}
+
+watch(searchQuery, handleSearch);
+watch(myPosts, handleMyPostsChange);
+
 onMounted(() => {
-  fetchLatestNews();
+  fetchLatestNews(); 
+  fetchArticles(); 
 });
 </script>
 
@@ -53,36 +73,50 @@ onMounted(() => {
     <div class="landing-container-wrap">
       <div class="landing-intro-image-container">
         <img :src="introImage" alt="Intro Image" class="landing-intro-image" />
-        <div v-if="latestArticle" class="landing-top-blog-div">
-          <div class="landing-blog-post">
-            <div class="landing-blog-post-heading">
-              <div class="landing-blog-post-badge">
-                <span class="landing-blog-post-badge-text">
-                  {{ latestArticle.source }}
-                </span>
-              </div>
 
-              <h2 class="landing-blog-post-title">{{ latestArticle.title }}</h2>
-            </div>
-            <div class="landing-blog-post-meta">
-              <div class="landing-blog-post-author-div">
-                <img :src="latestArticle.image || introImage" alt="Author Image" class="landing-blog-post-author-image"/>
-                <span class="landing-blog-post-author">{{ latestArticle.author }}</span>
+        <ErrorBoundary :error="error" :errorMessage="'Failed to load latest article. Please try again.'">
+          <div v-if="latestArticle" class="landing-top-blog-div">
+            <div class="landing-blog-post">
+              <div class="landing-blog-post-heading">
+                <div class="landing-blog-post-badge">
+                  <span class="landing-blog-post-badge-text">
+                    {{ latestArticle.source }}
+                  </span>
+                </div>
+                <h2 class="landing-blog-post-title">{{ latestArticle.title }}</h2>
               </div>
-              <span class="landing-blog-post-date">{{ latestArticle.publishedAt }}</span>
+              <div class="landing-blog-post-meta">
+                <div class="landing-blog-post-author-div">
+                  <img :src="latestArticle.image || introImage" alt="Author Image" class="landing-blog-post-author-image"/>
+                  <span class="landing-blog-post-author">{{ latestArticle.author.name }}</span>
+                </div>
+                <span class="landing-blog-post-date">{{ formatDate(latestArticle.created_at) }}</span>
+              </div>
             </div>
           </div>
-        </div>
+        </ErrorBoundary>
       </div>
+
       <div class="landing-news-container">
         <div class="landing-container-heading">
           <h3 class="landing-container-heading-text">Latest Post</h3>
         </div>
-        <BlogList :searchQuery="searchQuery" :my_posts="false" />
+
+        <ErrorBoundary :error="error" :errorMessage="'Failed to load blog list.'">
+          <BlogList 
+            :searchQuery="searchQuery" 
+            :my_posts="myPosts" 
+            :articles="articles" 
+            :loading="loading" 
+            :buttonText="buttonText" 
+            @loadMore="handleLoadMore" 
+          />
+        </ErrorBoundary>
       </div>
     </div>
   </main>
 </template>
+
 
 <style scoped>
 
