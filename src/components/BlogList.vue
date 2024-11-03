@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { computed, onMounted, toRef, watch, ref } from 'vue';
+import { computed, toRef, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
-import { useArticleStore } from '@/stores/articleStore';  
+import { defineProps } from 'vue';
 import Cookies from 'js-cookie';
 import { formatDate } from '@/utils';
-import DataLoader from '@/components/DataLoader.vue';
+
+const emit = defineEmits(['loadMore']);
 
 const props = defineProps<{
   searchQuery: string;
-  my_posts: boolean;
+  articles: Array<any>; 
+  my_posts?: boolean;    
+  loading?: boolean;     
+  buttonText?: string;  
 }>();
-
-const loading = ref(false);
 
 const router = useRouter();
 const searchQueryRef = toRef(props, 'searchQuery');
-const myPostsRef = toRef(props, 'my_posts');
-const articleStore = useArticleStore();  
 
 const buttonText = computed(() => {
-  return Cookies.get('userId') ? 'Load More' : 'View More';
+  return props.buttonText || (Cookies.get('userId') ? 'Load More' : 'View More'); 
 });
 
 const filteredArticles = computed(() => {
-  return articleStore.articles.filter(article => {
+  return props.articles.filter(article => {
     const lowerCaseQuery = searchQueryRef.value.toLowerCase();
     return (
       article.title.toLowerCase().includes(lowerCaseQuery) || 
@@ -34,42 +34,17 @@ const filteredArticles = computed(() => {
   });
 });
 
-async function loadMore() {
-  loading.value = true; 
-  articleStore.page += 1;  
-  await articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value, true);
-  loading.value = false;
+function handleLoadMore() {
+  emit('loadMore');
 }
 
 function navigateToBlog(blogId: string) {
   router.push({ name: 'BlogPage', params: { blog_id: blogId } });
 }
-
-onMounted(async () => {
-  loading.value = true; 
-  await articleStore.fetchArticles(searchQueryRef.value, myPostsRef.value); 
-  loading.value = false; 
-});
-
-
-watch(searchQueryRef, async (newQuery) => {
-  loading.value = true; 
-  await articleStore.fetchArticles(newQuery, myPostsRef.value);
-  loading.value = false; 
-});
-
-watch(myPostsRef, async (newMyPosts) => {
-  loading.value = true; 
-  await articleStore.fetchArticles(searchQueryRef.value, newMyPosts);
-  loading.value = false; 
-});
-
 </script>
-
 
 <template>
   <div class="blog-list">
-    <DataLoader v-if="loading" /> 
     <div 
       v-for="(article, index) in filteredArticles" 
       :key="index" 
@@ -93,7 +68,7 @@ watch(myPostsRef, async (newMyPosts) => {
     </div>
   </div>
   <div class="view-more-button-div">
-    <button @click="loadMore" class="view-more-button">{{ buttonText }}</button>
+    <button @click="handleLoadMore" class="view-more-button">{{ buttonText }}</button>
   </div>
 </template>
 
